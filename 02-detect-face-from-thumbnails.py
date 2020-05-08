@@ -17,8 +17,8 @@ def count_faces_of(url):
 
 def main():
     import sys
-    in_file = 'channel-videos-512.csv'
-    out_file = 'n-faces.csv'
+    in_file = 'all-videos-20200507.csv'
+    out_file = 'videos-face-20200507.csv'
     with open(in_file, 'r') as ifp, open(out_file, 'w') as ofp:
         csv_reader = csv.reader(ifp)
         header_row = next(csv_reader)
@@ -26,12 +26,15 @@ def main():
         url_col = header_row.index('thumbnail-url')
         vid_col = header_row.index('vid')
 
-        print('vid,n-faces', file=ofp)
+        csv_writer = csv.writer(ofp)
+        csv_writer.writerow(header_row + ['n-faces'])
+
         n_rows = 0
-        for vid, url in map(lambda r: (r[vid_col], r[url_col]), csv_reader):
+        for row in csv_reader:
+            vid, url = row[vid_col], row[url_col]
             n_rows += 1
             nfaces = count_faces_of(url)
-            print(f'{vid},{nfaces}', file=ofp)
+            csv_writer.writerow(row + [nfaces])
             sys.stdout.write(f'\r{n_rows}')
 
 if __name__ == '__main__':

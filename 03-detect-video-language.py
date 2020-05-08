@@ -11,8 +11,8 @@ def detect_language(title):
     return language.code
 
 def main():
-    in_file = 'channel-videos-512.csv'
-    out_file = 'video-language.csv'
+    in_file = 'videos-face-20200507.csv'
+    out_file = 'videos-facelang-20200507.csv'
     with open(in_file, 'r') as ifp, open(out_file, 'w') as ofp:
         csv_reader = csv.reader(ifp)
         header_row = next(csv_reader)
@@ -20,10 +20,13 @@ def main():
         title_col = header_row.index('title')
         vid_col = header_row.index('vid')
 
-        print('vid,language', file=ofp)
-        for vid, title in map(lambda r: (r[vid_col], r[title_col]), csv_reader):
+        csv_writer = csv.writer(ofp)
+        csv_writer.writerow(header_row + ['language'])
+
+        for row in csv_reader:
+            vid, title = row[vid_col], row[title_col]
             language = detect_language(title)
-            print(f'{vid},{language}', file=ofp)
+            csv_writer.writerow(row + [language])
 
 if __name__ == '__main__':
     main()

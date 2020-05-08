@@ -66,23 +66,26 @@ def fetch_title_and_thumbnails(driver, channel_id, n_thumbnails=50):
     return elements
 
 def main():
-    with open('channel-id.txt', 'r') as fp:
-        channels = fp.read().splitlines()
+    import sys
+    import csv
+    in_file = sys.argv[1]
+    with open(in_file, 'r') as fp:
+        channels = set(fp.read().splitlines())
+    if len(sys.argv) > 2:
+        exclude_file = sys.argv[2]
+        with open(exclude_file, 'r') as fp:
+            channels.difference_update(fp.read().splitlines())
 
     driver = webdriver.Safari()
     driver.maximize_window()
 
-    with open('channel-videos.csv', 'w') as ofp:
-        print('cid,vid,title,thumbnail-url', file=ofp)
-        for cid in channels[:512]:
+    with open('all-videos.csv', 'w', newline='') as ofp:
+        writer = csv.writer(ofp)
+        writer.writerow(['vid', 'cid', 'title', 'thumbnail-url'])
+        for cid in sorted(channels):
             elements = fetch_title_and_thumbnails(driver, cid)
             for vid, (title, url) in elements.items():
-                print(
-                    repr('{},{},"{}",{}'.format(
-                        cid, vid, title.replace('"', '""'), url
-                    )),
-                    file=ofp
-                )
+                writer.writerow([vid, cid, title.replace('\n', '\\n'), url])
 
     driver.close()
 
