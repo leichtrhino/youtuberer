@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import time
+import csv
+import argparse
 from urllib.parse import urlparse
 from selenium import webdriver
 
@@ -40,15 +42,15 @@ def find_title_dict_from(driver):
         driver.find_elements_by_xpath('//a[contains(@href, "/watch")]')
     ))
 
-def fetch_title_and_thumbnails(driver, channel_id, n_thumbnails=50):
+def fetch_title_and_thumbnails(driver, channel_id, n_videos=50):
     driver.get(f'https://www.youtube.com/channel/{channel_id}/videos')
     elements = dict()
     scroll_progress = True
-    while len(elements) < n_thumbnails and scroll_progress:
+    while len(elements) < n_videos and scroll_progress:
         offset_prev = driver.execute_script('return window.pageYOffset')
         time.sleep(0.1)
-        for _ in range(25):
-            driver.execute_script(f'window.scrollBy(0,100)')
+        for _ in range(10):
+            driver.execute_script(f'window.scrollBy(0,50)')
             time.sleep(0.1)
         offset_curr = driver.execute_script('return window.pageYOffset')
         time.sleep(0.1)
@@ -66,28 +68,34 @@ def fetch_title_and_thumbnails(driver, channel_id, n_thumbnails=50):
     return elements
 
 def main():
-    import sys
-    import csv
-    in_file = sys.argv[1]
-    with open(in_file, 'r') as fp:
-        channels = set(fp.read().splitlines())
-    if len(sys.argv) > 2:
-        exclude_file = sys.argv[2]
-        with open(exclude_file, 'r') as fp:
-            channels.difference_update(fp.read().splitlines())
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n', '--num-video', type=int)
+    parser.add_argument('in-file', type=argparse.FileType('r'),
+                        help='list of channels')
+    parser.add_argument('out-file', type=argparse.FileType('w'),
+                        help='csv file with "vid,cid,title,thumbnail-url"')
+
+    args = parser.parse_args()
+    in_file = args.__dict__['in-file']
+    out_file = args.__dict__['out-file']
+    num_video = args.num_video
+
+    channels = set(in_file.read().splitlines())
 
     driver = webdriver.Safari()
     driver.maximize_window()
 
-    with open('all-videos.csv', 'w', newline='') as ofp:
-        writer = csv.writer(ofp)
-        writer.writerow(['vid', 'cid', 'title', 'thumbnail-url'])
-        for cid in sorted(channels):
-            elements = fetch_title_and_thumbnails(driver, cid)
-            for vid, (title, url) in elements.items():
-                writer.writerow([vid, cid, title.replace('\n', '\\n'), url])
+    writer = csv.writer(out_file)
+    writer.writerow(['vid', 'cid', 'title', 'thumbnail-url'])
+    for cid in sorted(channels):
+        elements = fetch_title_and_thumbnails(driver, cid, num_video)
+        for vid, (title, url) in elements.items():
+            writer.writerow([vid, cid, title.replace('\n', '\\n'), url])
+        out_file.flush()
 
     driver.close()
+    in_file.close()
+    out_file.close()
 
 if __name__ == '__main__':
     main()
