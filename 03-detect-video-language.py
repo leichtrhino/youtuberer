@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import csv
+import argparse
 from polyglot.detect import Detector
 # 要pyicu,pycld2のインストール
 # CFLAGS=-stdlib=libc++ pip install pycld2
@@ -11,22 +12,31 @@ def detect_language(title):
     return language.code
 
 def main():
-    in_file = 'videos-face-20200507.csv'
-    out_file = 'videos-facelang-20200507.csv'
-    with open(in_file, 'r') as ifp, open(out_file, 'w') as ofp:
-        csv_reader = csv.reader(ifp)
-        header_row = next(csv_reader)
-        ncol = len(header_row)
-        title_col = header_row.index('title')
-        vid_col = header_row.index('vid')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('in-file', type=argparse.FileType('r'),
+                        help='csv file with cols that "video-id,title"')
+    parser.add_argument('out-file', type=argparse.FileType('w'),
+                        help='csv file added column "language"')
 
-        csv_writer = csv.writer(ofp)
-        csv_writer.writerow(header_row + ['language'])
+    args = parser.parse_args()
+    ifp = args.__dict__['in-file']
+    ofp = args.__dict__['out-file']
 
-        for row in csv_reader:
-            vid, title = row[vid_col], row[title_col]
-            language = detect_language(title)
-            csv_writer.writerow(row + [language])
+    csv_reader = csv.reader(ifp)
+    header_row = next(csv_reader)
+    title_col = header_row.index('title')
+    vid_col = header_row.index('vid')
+
+    csv_writer = csv.writer(ofp)
+    csv_writer.writerow(header_row + ['language'])
+
+    for row in csv_reader:
+        vid, title = row[vid_col], row[title_col]
+        language = detect_language(title)
+        csv_writer.writerow(row + [language])
+
+    ifp.close()
+    ofp.close()
 
 if __name__ == '__main__':
     main()
