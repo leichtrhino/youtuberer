@@ -2,12 +2,15 @@
 import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 import sys
+import csv
 import shutil
 import tempfile
 import subprocess
 import random
+import argparse
 
 import pafy
+pafy.set_api_key('')
 
 def process_video(vid):
     if os.path.exists(os.path.join('syncnet_output', 'pycrop', vid)):
@@ -41,20 +44,30 @@ def process_video(vid):
     os.chdir('..')
 
 def main():
-    import csv
-    pafy.set_api_key('')
-    with open('videos-for-syncnet.csv', 'r') as ifp, open('videos-syncnet-processed.csv', 'w') as ofp:
-        reader = csv.reader(ifp)
-        writer = csv.writer(ofp)
-        next(reader)
-        rows = [row for row in reader]
-        random.shuffle(rows)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('in-file', type=argparse.FileType('r'))
+    parser.add_argument('out-file', type=argparse.FileType('w'))
 
-        writer.writerow(['vid'])
-        for vid, cid, title, thumbnail_url in rows:
-            process_video(vid)
-            writer.writerow([vid])
-            ofp.flush()
+    args = parser.parse_args()
+    ifp = args.__dict__['in-file']
+    ofp = args.__dict__['out-file']
+
+    reader = csv.reader(ifp)
+    writer = csv.writer(ofp)
+    header_row = next(reader)
+    vid_col = header_row.index('vid')
+    rows = [row for row in reader]
+    random.shuffle(rows)
+
+    writer.writerow(['vid'])
+    for row in rows:
+        vid = row[vid_col]
+        process_video(vid)
+        writer.writerow([vid])
+        ofp.flush()
+
+    ifp.close()
+    ofp.close()
 
 if __name__ == '__main__':
     main()
