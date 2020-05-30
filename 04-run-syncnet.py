@@ -12,8 +12,8 @@ import argparse
 import pafy
 pafy.set_api_key('')
 
-def process_video(vid):
-    if os.path.exists(os.path.join('syncnet_output', 'pycrop', vid)):
+def process_video(vid, target_dir):
+    if os.path.exists(os.path.join(target_dir, 'pycrop', vid)):
         print(f'Video {vid} already processed. skip.')
         return
     print(f'Processing {vid}')
@@ -36,38 +36,32 @@ def process_video(vid):
         subprocess.run(['python', 'run_syncnet.py'] + syncnet_option)
         subprocess.run(['python', 'run_visualise.py'] + syncnet_option)
         # copy output
-        syncnet_output = os.path.join('..', 'syncnet_output')
         for dirname in ('pycrop', 'pywork'):
             shutil.copytree(os.path.join(tmpdirname, dirname, vid),
-                            os.path.join(syncnet_output, dirname, vid))
+                            os.path.join('..', target_dir, dirname, vid))
 
     os.chdir('..')
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('in-file', type=argparse.FileType('r'))
-    parser.add_argument('out-file', type=argparse.FileType('w'))
+    parser.add_argument('out-dir', type=str)
 
     args = parser.parse_args()
     ifp = args.__dict__['in-file']
-    ofp = args.__dict__['out-file']
+    target_dir = args.__dict__['out-dir']
 
     reader = csv.reader(ifp)
-    writer = csv.writer(ofp)
     header_row = next(reader)
     vid_col = header_row.index('vid')
     rows = [row for row in reader]
     random.shuffle(rows)
 
-    writer.writerow(['vid'])
     for row in rows:
         vid = row[vid_col]
-        process_video(vid)
-        writer.writerow([vid])
-        ofp.flush()
+        process_video(vid, target_dir)
 
     ifp.close()
-    ofp.close()
 
 if __name__ == '__main__':
     main()
