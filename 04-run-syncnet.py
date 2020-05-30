@@ -32,7 +32,7 @@ def process_video(vid, target_dir):
             f'--reference={vid}',
             f'--data_dir={tmpdirname}',
         ]
-        subprocess.run(['python', 'run_pipeline.py'] + syncnet_option)
+        subprocess.run(['python', 'run_pipeline.py'] + syncnet_option + ['--sample_rate=44100'])
         subprocess.run(['python', 'run_syncnet.py'] + syncnet_option)
         subprocess.run(['python', 'run_visualise.py'] + syncnet_option)
         # copy output
