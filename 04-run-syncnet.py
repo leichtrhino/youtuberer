@@ -12,9 +12,12 @@ import argparse
 import pafy
 pafy.set_api_key('')
 
-def process_video(vid, target_dir):
+def process_video(vid, target_dir, max_video_length):
     if os.path.exists(os.path.join(target_dir, 'pycrop', vid)):
         print(f'Video {vid} already processed. skip.')
+        return
+    if pafy.new(vid).length > max_video_length:
+        print(f'Video {vid} is too long to process. skip.')
         return
     print(f'Processing {vid}')
     os.chdir('syncnet_python')
@@ -44,12 +47,14 @@ def process_video(vid, target_dir):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--max-video-length', type=int)
     parser.add_argument('in-file', type=argparse.FileType('r'))
     parser.add_argument('out-dir', type=str)
 
     args = parser.parse_args()
     ifp = args.__dict__['in-file']
     target_dir = args.__dict__['out-dir']
+    max_video_length = args.max_video_length
 
     reader = csv.reader(ifp)
     header_row = next(reader)
@@ -59,7 +64,7 @@ def main():
 
     for row in rows:
         vid = row[vid_col]
-        process_video(vid, target_dir)
+        process_video(vid, target_dir, max_video_length)
 
     ifp.close()
 
