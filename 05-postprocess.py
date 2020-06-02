@@ -36,6 +36,7 @@ def main():
     parser.add_argument('--device', default='cpu')
     parser.add_argument('--without-embedding', action='store_true')
     parser.add_argument('--without-confidence', action='store_true')
+    parser.add_argument('--ignore-noexist', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('syncnet-output-dir')
 
@@ -54,8 +55,10 @@ def main():
     for vid in video_ids:
         if args.verbose:
             print(f'processing {vid}')
-        activesd_path = os.path.join(pywork_dir, vid, 'activesd.pckl')
         if not args.without_confidence:
+            activesd_path = os.path.join(pywork_dir, vid, 'activesd.pckl')
+            if args.ignore_noexist and not os.path.isfile(activesd_path):
+                continue
             confidence_file = os.path.join(pywork_dir, vid, 'confidence.pckl')
             confidence = calculate_confidence(activesd_path)
             with open(confidence_file, 'wb') as fp:
