@@ -37,7 +37,7 @@ def process_video(vid, target_dir, max_video_length):
         ]
         subprocess.run(['python', 'run_pipeline.py'] + syncnet_option + ['--sample_rate=44100'])
         subprocess.run(['python', 'run_syncnet.py'] + syncnet_option)
-        subprocess.run(['python', 'run_visualise.py'] + syncnet_option)
+        #subprocess.run(['python', 'run_visualise.py'] + syncnet_option)
         # copy output
         for dirname in ('pycrop', 'pywork'):
             shutil.copytree(os.path.join(tmpdirname, dirname, vid),
