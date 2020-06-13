@@ -6,6 +6,7 @@ import pickle
 import argparse
 
 import numpy as np
+import scipy.signal
 import torch
 import torchvision.io
 
@@ -16,10 +17,13 @@ def calculate_confidence(activesd_path):
         dists = pickle.load(fp)
     confidences = []
     for dist in dists:
-        mean_dists = np.mean(dist, 0)
-        minval = np.min(mean_dists)
-        conf = np.median(mean_dists) - minval
-        confidences.append(conf)
+        mean_dist = np.mean(dist, 0)
+        minval = np.min(mean_dist)
+        minidx = np.argmin(mean_dist)
+        conf = np.median(mean_dist) - minval
+        framewise_conf = np.median(mean_dist) - dist[:, minidx]
+        framewise_conf_m = scipy.signal.medfilt(framewise_conf, kernel_size=9)
+        confidences.append({'conf': conf, 'framewise-conf': framewise_conf_m})
     return confidences
 
 def calculate_embedding(video_path, model, device):
