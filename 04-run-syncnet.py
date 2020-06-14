@@ -13,7 +13,8 @@ import pafy
 pafy.set_api_key('')
 
 def process_video(vid, target_dir, max_video_length):
-    if os.path.exists(os.path.join(target_dir, 'pycrop', vid)):
+    if os.path.exists(os.path.join(target_dir, 'pycrop', vid)) or\
+       os.path.exists(os.path.join(target_dir, 'pywork', vid)):
         print(f'Video {vid} already processed. skip.')
         return
     if pafy.new(vid).length > max_video_length:
