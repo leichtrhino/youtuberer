@@ -27,13 +27,12 @@ def calculate_confidence(activesd_path):
     return confidences
 
 def calculate_embedding(video_path, model, device):
-    vframes, _, _ = torchvision.io.read_video(video_path, 0., 1., 'sec')
+    vframes, _, _ = torchvision.io.read_video(video_path)
     vframes = vframes.to(device)
     frames = vframes.permute((0, 3, 1, 2)).float().div(255)
     frames = torch.nn.functional.interpolate(frames, (160, 160))
     embedding_vectors = model(frames).detach()
-    embedding, _ = embedding_vectors.median(0)
-    return embedding.to('cpu').numpy()
+    return embedding_vectors.to('cpu').numpy()
 
 def main():
     parser = argparse.ArgumentParser()
