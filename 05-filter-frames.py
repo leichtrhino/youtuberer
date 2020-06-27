@@ -52,9 +52,9 @@ def process_video(vid, args):
     pywork_dir = os.path.join(syncnet_output_dir, 'pywork')
     activesd_path = os.path.join(pywork_dir, vid, 'activesd.pckl')
     filtered_output_dir = args.__dict__['filtered-output-dir']
-    outpycrop_dir = os.path.join(filtered_output_dir, 'pycrop-filter', vid)
-    if not os.path.isdir(os.path.join(filtered_output_dir, 'pycrop-filter')):
-        os.mkdir(os.path.join(filtered_output_dir, 'pycrop-filter'))
+    outpycrop_dir = os.path.join(filtered_output_dir, vid)
+    if not os.path.isdir(filtered_output_dir):
+        os.mkdir(filtered_output_dir)
     if not os.path.isdir(outpycrop_dir):
         os.mkdir(outpycrop_dir)
     if not os.path.isfile(activesd_path):
