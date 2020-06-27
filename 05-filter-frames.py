@@ -15,7 +15,7 @@ import torchaudio
 def calculate_confidence(activesd_path):
     with open(activesd_path, 'rb') as fp:
         dists = pickle.load(fp)
-    confidences = []
+    framewise_confidences, confidences = [], []
     for dist in dists:
         mean_dist = np.mean(dist, 0)
         minval = np.min(mean_dist)
@@ -23,8 +23,9 @@ def calculate_confidence(activesd_path):
         conf = np.median(mean_dist) - minval
         framewise_conf = np.median(mean_dist) - dist[:, minidx]
         framewise_conf_m = scipy.signal.medfilt(framewise_conf, kernel_size=9)
-        confidences.append(framewise_conf_m)
-    return confidences
+        framewise_confidences.append(framewise_conf_m)
+        confidences.append(conf)
+    return framewise_confidences, confidences
 
 def calculate_rms_db(video_path, frame_rate):
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -64,7 +65,7 @@ def process_video(vid, args):
                 print('video {vid} does not have activesd.pckl, skip.')
                 return
     # 1. calculate framewise confidence score for all crops
-    confidences = calculate_confidence(activesd_path)
+    framewise_confidences, confidences = calculate_confidence(activesd_path)
     # 2. calculate rms in db
     rms_dbs = list()
     video_dir = os.path.join(pycrop_dir, vid)
